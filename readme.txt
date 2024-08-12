@@ -59,8 +59,9 @@ View full documentation at: [https://www.paidmembershipspro.com/add-ons/pmpro-ak
 
 = 1.1 - 2024-08-12 =
 * FEATURE: Now only blocking "definite" spam. For "likely spam", users are prompted to checkout again.
-* ENHANCEMENT: Now tracking likely spam responses from Akismet as "spam activity" for the PMPro spam blocker. Folks testing cards on checkout pages are blocked twice as fast now.
+* ENHANCEMENT: Now always tracking likely spam responses from Akismet as "spam activity" for the PMPro spam blocker. Folks testing cards on checkout pages are blocked twice as fast now.
 * ENHANCEMENT: You can use the `pmpro_akismet_threshold` filter and have it return 1 instead of 2 to use the stricter rules where all likely spam is treated as spam and blocked.
+* ENHANCEMENT/BUG FIX: Fixed formatting of the Akismet link if shown via the `pmpro_akismet_checkout_privacy_notice` filter. Have that return 'display' to display.
 
 = 1.0.1 - 2023-03-30 =
 * ENHANCEMENT: Now calling pmpro_track_spam() when spam data is detected. If the PMPro Spam Protection feature is enabled, this will block users from the same IP from submitting checkouts after a certain number of failures.
