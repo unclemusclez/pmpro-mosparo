@@ -133,10 +133,7 @@ function pmpro_akismet_show_privacy_notice() {
 	?>
 	<p class="pmpro_akismet_privacy_notice">
 		<?php esc_html_e( 'This site uses Akismet to reduce spam.', 'pmpro-akismet' ); ?>
-		&nbsp;
-		<a href="<?php echo esc_url( 'https://akismet.com/privacy/' ); ?>" target="_blank" rel="nofollow noopener">
-			<?php esc_html_e( 'Learn how your data is processed', 'pmpro-akismet' ); ?>
-		</a>.
+		<a href="<?php echo esc_url( 'https://akismet.com/privacy/' ); ?>" target="_blank" rel="nofollow noopener"><?php esc_html_e( 'Learn how your data is processed', 'pmpro-akismet' ); ?></a>.
 	</p>
 	<?php
 }	
