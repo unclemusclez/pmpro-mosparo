@@ -2,7 +2,7 @@
 # This file is distributed under the same license as the Paid Memberships Pro - Mosparo Integration plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: Paid Memberships Pro - mosparo Integration 1.0\n"
+"Project-Id-Version: Paid Memberships Pro - Mosparo Integration 1.0\n"
 "Report-Msgid-Bugs-To: info@paidmembershipspro.com\n"
 "Last-Translator: Paid Memberships Pro <info@paidmembershipspro.com>\n"
 "Language-Team: Paid Memberships Pro <info@paidmembershipspro.com>\n"
@@ -17,7 +17,7 @@ msgstr ""
 #. Plugin Name of the plugin
 #: pmpro-mosparo.php:60
 #: pmpro-mosparo.php:90
-msgid "Paid Memberships Pro - mosparo Integration"
+msgid "Paid Memberships Pro - Mosparo Integration"
 msgstr ""
 
 #. Plugin URI of the plugin
@@ -25,7 +25,7 @@ msgid "https://www.paidmembershipspro.com/add-ons/pmpro-mosparo/"
 msgstr ""
 
 #. Description of the plugin
-msgid "Protect your membership site from checkout spam with mosparo and Paid Memberships Pro."
+msgid "Protect your membership site from checkout spam with Mosparo and Paid Memberships Pro."
 msgstr ""
 
 #. Author of the plugin
@@ -42,7 +42,7 @@ msgid "Your submission has been flagged as suspicious. Please double-check all f
 msgstr ""
 
 #: pmpro-mosparo.php:36
-msgid "mosparo Integration"
+msgid "Mosparo Integration"
 msgstr ""
 
 #: pmpro-mosparo.php:59
@@ -51,7 +51,7 @@ msgid "The following plugin(s) are required for the %1$s plugin to work: %2$s"
 msgstr ""
 
 #: pmpro-mosparo.php:100
-msgid "The Paid Memberships Pro - mosparo Integration requires a valid connection to a mosparo instance. Please configure mosparo Integration to enable anti-spam functionality."
+msgid "The Paid Memberships Pro - Mosparo Integration requires a valid connection to a Mosparo instance. Please configure Mosparo Integration to enable anti-spam functionality."
 msgstr ""
 
 #: includes/checkout.php:XXX
@@ -59,7 +59,7 @@ msgid "Spam protection failed. Please try again."
 msgstr ""
 
 #: includes/checkout.php:YYY
-msgid "This site uses mosparo to reduce spam."
+msgid "This site uses Mosparo to reduce spam."
 msgstr ""
 
 #: includes/checkout.php:YYY

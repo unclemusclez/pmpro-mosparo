@@ -1,6 +1,6 @@
 <?php
 /**
- * All checkout/registration functionality for mosparo integration.
+ * All checkout/registration functionality for Mosparo Integration.
  */
 
 use MosparoIntegration\Helper\VerificationHelper;
@@ -23,24 +23,24 @@ function pmpro_mosparo_registration_checks( $continue ) {
         return $continue;
     }
 
-    // Check if mosparo Integration is active; bail if not.
+    // Check if Mosparo Integration is active; bail if not.
     if ( ! class_exists( 'MosparoIntegration\Helper\VerificationHelper' ) ) {
         return $continue;
     }
 
-    // Check if mosparo has a valid connection.
+    // Check if Mosparo has a valid connection.
     if ( ! PMPro_Mosparo::has_valid_connection() ) {
         return $continue;
     }
 
-    // mosparo submits a token via a hidden field (e.g., 'mosparo_token').
+    // Mosparo submits a token via a hidden field (e.g., 'mosparo_token').
     if ( empty( $_REQUEST['mosparo_token'] ) ) {
         $continue = false;
         pmpro_setMessage( esc_html__( 'Spam protection failed. Please try again.', 'pmpro-mosparo' ), 'pmpro_error' );
         return $continue;
     }
 
-    // Validate the mosparo token.
+    // Validate the Mosparo token.
     $verificationHelper = VerificationHelper::getInstance();
     $result = $verificationHelper->verifySubmission( sanitize_text_field( $_REQUEST['mosparo_token'] ) );
 
@@ -62,11 +62,11 @@ function pmpro_mosparo_registration_checks( $continue ) {
      * Filter the threshold for spam detection.
      * @param int $threshold The threshold to determine if the user is spam or not.
      * @param object $level The level the user is signing up for.
-     * @param mixed $result The mosparo verification result.
+     * @param mixed $result The Mosparo verification result.
      */
     $threshold = apply_filters( 'pmpro_mosparo_threshold', $threshold, $level, $result );
 
-    // Check mosparo verification result.
+    // Check Mosparo verification result.
     $is_spam = PMPro_Mosparo::is_spam( $result ); // Delegate to class method.
 
     if ( ! $is_spam ) {
@@ -90,7 +90,7 @@ function pmpro_mosparo_registration_checks( $continue ) {
 add_filter( 'pmpro_registration_checks', 'pmpro_mosparo_registration_checks', 10, 1 );
 
 /**
- * Add the mosparo script and hidden token field to the checkout form.
+ * Add the Mosparo script and hidden token field to the checkout form.
  */
 function pmpro_mosparo_add_frontend_script() {
     global $pmpro_mosparo_extra_nonce;
@@ -99,7 +99,7 @@ function pmpro_mosparo_add_frontend_script() {
         return;
     }
 
-    // Add mosparo JavaScript (assumes mosparo Integration provides this).
+    // Add Mosparo JavaScript (assumes Mosparo Integration provides this).
     $configHelper = \MosparoIntegration\Helper\ConfigHelper::getInstance();
     $connection = $configHelper->getConnection();
     if ( $connection ) {
@@ -110,7 +110,7 @@ function pmpro_mosparo_add_frontend_script() {
         <script type="text/javascript" src="<?php echo esc_url( $host . '/mosparo.js' ); ?>" async></script>
         <script type="text/javascript">
             document.addEventListener('DOMContentLoaded', function() {
-                new mosparo('mosparo-box', '<?php echo esc_js( $uuid ); ?>', '<?php echo esc_js( $publicKey ); ?>', {
+                new mosparo('Mosparo-box', '<?php echo esc_js( $uuid ); ?>', '<?php echo esc_js( $publicKey ); ?>', {
                     loadCssResource: true,
                     onSuccess: function(token) {
                         document.getElementById('mosparo_token').value = token;
@@ -133,7 +133,7 @@ function pmpro_mosparo_add_frontend_script() {
 add_action( 'pmpro_checkout_before_submit_button', 'pmpro_mosparo_add_frontend_script' );
 
 /**
- * Show mosparo privacy notice below the submit button.
+ * Show Mosparo privacy notice below the submit button.
  * 
  * @since 1.0
  */
@@ -145,11 +145,11 @@ function pmpro_mosparo_show_privacy_notice() {
         return;
     }
 
-    // Show a message about mosparo spam protection.
+    // Show a message about Mosparo spam protection.
     ?>
     <p class="pmpro_mosparo_privacy_notice">
         <?php esc_html_e( 'This site uses mosparo to reduce spam.', 'pmpro-mosparo' ); ?>
-        <a href="<?php echo esc_url( 'https://mosparo.io/privacy-policy/' ); ?>" target="_blank" rel="nofollow noopener"><?php esc_html_e( 'Learn how your data is processed', 'pmpro-mosparo' ); ?></a>.
+        <a href="<?php echo esc_url( 'https://mosparo.io/about-mosparo/' ); ?>" target="_blank" rel="nofollow noopener"><?php esc_html_e( 'Learn how your data is processed', 'pmpro-mosparo' ); ?></a>.
     </p>
     <?php
 }
