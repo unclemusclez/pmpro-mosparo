@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: Paid Memberships Pro - mosparo Integration
- * Plugin URI: https://www.paidmembershipspro.com/add-ons/pmpro-mosparo/
- * Description: Protect your membership site from checkout spam with mosparo and Paid Memberships Pro.
+ * Plugin Name: Paid Memberships Pro - Mosparo Integration
+ * Plugin URI: https://github.com/unclemusclez/pmpro-mosparo
+ * Description: Protect your membership site from checkout spam with Mosparo and Paid Memberships Pro.
  * Version: 1.0
- * Author: Paid Memberships Pro
- * Author URI: https://www.paidmembershipspro.com
+ * Author: Devin J. Dawson
+ * Author URI: https://waterpistol.co
  * Text Domain: pmpro-mosparo
  * Domain Path: /languages
  */
@@ -19,7 +19,7 @@ require_once( dirname( __FILE__ ) . '/includes/class.pmpro-mosparo.php' );
 require_once( dirname( __FILE__ ) . '/includes/checkout.php' );
 
 /**
- * Admin notice to check mosparo Integration only (no PMPro check).
+ * Admin notice to check Mosparo Integration only (no PMPro check).
  * 
  * @since 1.0
  */
@@ -29,12 +29,12 @@ function pmpro_mosparo_requirements_check() {
         return;
     }
 
-    // Check for mosparo Integration plugin only.
+    // Check for Mosparo Integration plugin only.
     $required_plugins = array(
-        'mosparo-integration' => __( 'mosparo Integration', 'pmpro-mosparo' )
+        'mosparo-integration' => __( 'Mosparo Integration', 'pmpro-mosparo' )
     );
 
-    // Check if mosparo Integration is installed.
+    // Check if Mosparo Integration is installed.
     $missing_plugins = array();
     foreach ( $required_plugins as $plugin => $name ) {
         if ( ! file_exists( WP_PLUGIN_DIR . '/' . $plugin ) ) {
@@ -42,7 +42,7 @@ function pmpro_mosparo_requirements_check() {
         }
     }
 
-    // If mosparo Integration is missing, show a notice.
+    // If Mosparo Integration is missing, show a notice.
     if ( ! empty( $missing_plugins ) ) {
         $install_plugins = array();
         foreach ( $missing_plugins as $path => $name ) {
@@ -53,14 +53,14 @@ function pmpro_mosparo_requirements_check() {
             '<div class="notice notice-warning"><p>%s</p></div>',
             sprintf(
                 esc_html__( 'The following plugin(s) are required for the %1$s plugin to work: %2$s', 'pmpro-mosparo' ),
-                esc_html__( 'Paid Memberships Pro - mosparo Integration', 'pmpro-mosparo' ),
+                esc_html__( 'Paid Memberships Pro - Mosparo Integration', 'pmpro-mosparo' ),
                 implode( ', ', $install_plugins )
             )
         );
         return;
     }
 
-    // Check if mosparo Integration is active.
+    // Check if Mosparo Integration is active.
     $inactive_plugins = array();
     foreach ( $required_plugins as $plugin => $name ) {
         $full_path = $plugin . '/' . $plugin . '.php';
@@ -69,7 +69,7 @@ function pmpro_mosparo_requirements_check() {
         }
     }
 
-    // If mosparo Integration is inactive, show a notice.
+    // If Mosparo Integration is inactive, show a notice.
     if ( ! empty( $inactive_plugins ) ) {
         $activate_plugins = array();
         foreach ( $inactive_plugins as $path => $name ) {
@@ -81,17 +81,17 @@ function pmpro_mosparo_requirements_check() {
             '<div class="notice notice-warning"><p>%s</p></div>',
             sprintf(
                 esc_html__( 'The following plugin(s) are required for the %1$s plugin to work: %2$s', 'pmpro-mosparo' ),
-                esc_html__( 'Paid Memberships Pro - mosparo Integration', 'pmpro-mosparo' ),
+                esc_html__( 'Paid Memberships Pro - Mosparo Integration', 'pmpro-mosparo' ),
                 implode( ', ', $activate_plugins )
             )
         );
         return;
     }
 
-    // Check if mosparo has a valid connection, passing null explicitly.
+    // Check if Mosparo has a valid connection, passing null explicitly.
     $configHelper = ConfigHelper::getInstance();
     if ( ! $configHelper->hasConnection( null ) ) {
-        echo '<div class="error"><p>' . esc_html__( 'The Paid Memberships Pro - mosparo Integration requires a valid connection to a mosparo instance. Please configure mosparo Integration to enable anti-spam functionality.', 'pmpro-mosparo' ) . '</p></div>';
+        echo '<div class="error"><p>' . esc_html__( 'The Paid Memberships Pro - Mosparo Integration requires a valid connection to a Mosparo instance. Please configure the Mosparo Integration plugin under Settings > Mosparo Integration to enable anti-spam functionality.', 'pmpro-mosparo' ) . '</p></div>';
     }
 }
 add_action( 'admin_notices', 'pmpro_mosparo_requirements_check' );
