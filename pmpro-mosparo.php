@@ -1,29 +1,29 @@
 <?php
 /**
- * Plugin Name: Paid Memberships Pro - Akismet Integration
- * Plugin URI: https://www.paidmembershipspro.com/add-ons/pmpro-akismet/
- * Description: Protect your membership site from checkout spam with Akismet and Paid Memberships Pro.
- * Version: 1.1
+ * Plugin Name: Paid Memberships Pro - mosparo Integration
+ * Plugin URI: https://www.paidmembershipspro.com/add-ons/pmpro-mosparo/
+ * Description: Protect your membership site from checkout spam with mosparo and Paid Memberships Pro.
+ * Version: 1.0
  * Author: Paid Memberships Pro
  * Author URI: https://www.paidmembershipspro.com
- * Text Domain: pmpro-akismet
+ * Text Domain: pmpro-mosparo
  * Domain Path: /languages
  */
 
-use PMPro_Akismet\Akismet;
+use MosparoIntegration\Helper\ConfigHelper;
 
 /**
  * Includes go here.
  */
-require_once( dirname( __FILE__ ) . '/includes/class.pmpro-akismet.php' );
-require_once( dirname( __FILE__ ) . '/includes/checkout.php' );
+require_once( dirname( __FILE__ ) . '/includes/class.pmpro-mosparo.php' ); // Adjust to a new mosparo-specific class if needed
+require_once( dirname( __FILE__ ) . '/includes/checkout.php' ); // Update this file to use mosparo instead of Akismet
 
 /**
- * Admin notice to show a warning that Paid Memberships Pro is inactive.
+ * Admin notice to show a warning that required plugins are inactive or misconfigured.
  * 
  * @since 1.0
  */
-function pmpro_akismet_pmpro_required() {
+function pmpro_mosparo_pmpro_required() {
 
     // Only show notices on PMPro page.
     if ( ! isset( $_REQUEST['page'] ) || strpos( $_REQUEST['page'], 'pmpro' ) === false ) {
@@ -32,8 +32,8 @@ function pmpro_akismet_pmpro_required() {
 
     // The required plugins for this Add On to work.
     $required_plugins = array(
-        'paid-memberships-pro' => __( 'Paid Memberships Pro', 'pmpro-akismet' ),
-        'akismet' => __( 'Akismet', 'pmpro-akismet' )
+        'paid-memberships-pro' => __( 'Paid Memberships Pro', 'pmpro-mosparo' ),
+        'mosparo-integration' => __( 'mosparo Integration', 'pmpro-mosparo' )
     );
 
     // Check if the required plugins are installed.
@@ -56,15 +56,14 @@ function pmpro_akismet_pmpro_required() {
         printf(
             '<div class="notice notice-warning"><p>%s</p></div>',
             sprintf(
-                esc_html__( 'The following plugin(s) are required for the %1$s plugin to work: %2$s', 'pmpro-akismet' ),
-                esc_html__( 'Paid Memberships Pro - Akismet Integration', 'pmpro-akismet' ),
+                esc_html__( 'The following plugin(s) are required for the %1$s plugin to work: %2$s', 'pmpro-mosparo' ),
+                esc_html__( 'Paid Memberships Pro - mosparo Integration', 'pmpro-mosparo' ),
                 implode( ', ', $install_plugins ) // $install_plugins was escaped when built.
             )
         );
 
         return; // Bail here, so we only show one notice at a time.
     }
-
 
     // Check if the required plugins are active and show a notice with activation links if they are not
     $inactive_plugins = array();
@@ -88,8 +87,8 @@ function pmpro_akismet_pmpro_required() {
         printf(
             '<div class="notice notice-warning"><p>%s</p></div>',
             sprintf(
-                esc_html__( 'The following plugin(s) are required for the %1$s plugin to work: %2$s', 'pmpro-akismet' ),
-                esc_html__( 'Paid Memberships Pro - Akismet Integration', 'pmpro-akismet' ),
+                esc_html__( 'The following plugin(s) are required for the %1$s plugin to work: %2$s', 'pmpro-mosparo' ),
+                esc_html__( 'Paid Memberships Pro - mosparo Integration', 'pmpro-mosparo' ),
                 implode( ', ', $activate_plugins ) // $activate_plugins was escaped when built.
             )
         );
@@ -97,21 +96,22 @@ function pmpro_akismet_pmpro_required() {
         return; // Bail here, so we only show one notice at a time.
     }
 
-    //Check if there's a valid API key in Akismet, if not show a message
-    if ( ! Akismet::has_valid_key() ) {
-        echo '<div class="error"><p>' . esc_html__( 'The Paid Memberships Pro - Akismet Integration requires a valid API key in Akismet. Please enter a valid API key in Akismet to enable anti-spam functionality.', 'pmpro-akismet' ) . '</p></div>';
+    // Check if mosparo is properly configured (e.g., connection to mosparo instance).
+    $configHelper = ConfigHelper::getInstance();
+    if ( ! $configHelper->hasConnection() ) { // Assuming ConfigHelper has a method like this; adjust as per mosparo's API.
+        echo '<div class="error"><p>' . esc_html__( 'The Paid Memberships Pro - mosparo Integration requires a valid connection to a mosparo instance. Please configure mosparo Integration to enable anti-spam functionality.', 'pmpro-mosparo' ) . '</p></div>';
         return;
     }
 
 }
-add_action( 'admin_notices', 'pmpro_akismet_pmpro_required' );
+add_action( 'admin_notices', 'pmpro_mosparo_pmpro_required' );
 
 /**
  * Load the plugin text domain for translation.
  * 
  * @since 1.0
  */
-function pmpro_akismet_load_textdomain() {
-    load_plugin_textdomain( 'pmpro-akismet', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+function pmpro_mosparo_load_textdomain() {
+    load_plugin_textdomain( 'pmpro-mosparo', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 }
-add_action( 'plugins_loaded', 'pmpro_akismet_load_textdomain' );
+add_action( 'plugins_loaded', 'pmpro_mosparo_load_textdomain' );

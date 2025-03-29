@@ -1,17 +1,17 @@
 <?php
 /**
- * All checkout/registration functionality.
+ * All checkout/registration functionality for mosparo integration.
  */
 
-use PMPro_Akismet\Akismet;
+use MosparoIntegration\Helper\VerificationHelper;
 
 /**
  * Run spam check during checkout process
  * 
  * @since 1.0
  */
-function pmpro_akismet_registration_checks( $continue ) {
-    global $pmpro_akismet_extra_nonce;
+function pmpro_mosparo_registration_checks( $continue ) {
+    global $pmpro_mosparo_extra_nonce;
 
     // Bail if another check already failed.
     if ( ! $continue ) {
@@ -23,67 +23,56 @@ function pmpro_akismet_registration_checks( $continue ) {
         return $continue;
     }
 
-    // Check if Akismet is active, just bail if it's not active.
-    if ( ! Akismet::is_active() ) {
+    // Check if mosparo Integration is active; bail if not.
+    if ( ! class_exists( 'MosparoIntegration\Helper\VerificationHelper' ) ) {
         return $continue;
     }
 
-    // Check if Akismet has a valid API key. Just bail if no API key is found.
-    if ( ! Akismet::has_valid_key() ) {
+    // Check if mosparo has a valid connection.
+    if ( ! PMPro_Mosparo::has_valid_connection() ) {
         return $continue;
     }
- 
-    $data_to_check = array(
-        'user_ip' => sanitize_text_field(  $_SERVER['REMOTE_ADDR'] ),
-        'user_agent' => sanitize_text_field(  $_SERVER['HTTP_USER_AGENT'] ),
-        'referrer' => sanitize_text_field(  $_SERVER['HTTP_REFERER'] ),
-        'blog' => get_option( 'home' ),
-        'blog_lang' => get_locale(),
-        'blog_charset' => get_option( 'blog_charset' ),
-        'permalink' => get_permalink(),
-        'comment_type' => 'signup',
-        'comment_author' => sanitize_text_field( $_REQUEST['username'] ),
-        'comment_author_email' => sanitize_email( $_REQUEST['bemail'] ),
-        'honeypot_field_name' => 'fullname'
-    );
-    
-    // Allow filtering of data.
-    $data_to_check = apply_filters( 'pmpro_akismet_data_to_check', $data_to_check ); // Filter to check the data.
 
-    // Check to see if Akismet thinks it's spam or not.
-    $is_spam = apply_filters( 'pmpro_akismet_checkout_is_spam', Akismet::is_spam( $data_to_check ) );
+    // mosparo submits a token via a hidden field (e.g., 'mosparo_token').
+    if ( empty( $_REQUEST['mosparo_token'] ) ) {
+        $continue = false;
+        pmpro_setMessage( esc_html__( 'Spam protection failed. Please try again.', 'pmpro-mosparo' ), 'pmpro_error' );
+        return $continue;
+    }
 
-    // We are stricter with free levels. (Lower is stricter.)
+    // Validate the mosparo token.
+    $verificationHelper = VerificationHelper::getInstance();
+    $result = $verificationHelper->verifySubmission( sanitize_text_field( $_REQUEST['mosparo_token'] ) );
+
+    // Adjust threshold logic based on level (free vs. paid).
     $level = pmpro_getLevelAtCheckout();
     if ( pmpro_isLevelFree( $level ) ) {
-        $threshold = 1;
+        $threshold = 1; // Stricter for free levels.
     } else {
         $threshold = 2;
     }
 
     // If an extra nonce was passed in, raise the threshold.
-    if ( ! empty( $_REQUEST['pmpro_akismet_extra_nonce'] ) && wp_verify_nonce( sanitize_text_field( $_REQUEST['pmpro_akismet_extra_nonce'] ), 'pmpro_akismet_extra_nonce' ) ) {
+    if ( ! empty( $_REQUEST['pmpro_mosparo_extra_nonce'] ) && wp_verify_nonce( sanitize_text_field( $_REQUEST['pmpro_mosparo_extra_nonce'] ), 'pmpro_mosparo_extra_nonce' ) ) {
         $threshold = 2;
-
-        // Update nonce in case they need to submit again.
-        $pmpro_akismet_extra_nonce = wp_create_nonce( 'pmpro_akismet_extra_nonce' );
+        $pmpro_mosparo_extra_nonce = wp_create_nonce( 'pmpro_mosparo_extra_nonce' ); // Update nonce for resubmission.
     }
 
     /**
-     * Allow for filtering of the threshold. By default the threshold is 2 (blatant spam only) for paid levels and 1 (likely spam) for free levels.
-     * @since [TBD]
+     * Filter the threshold for spam detection.
      * @param int $threshold The threshold to determine if the user is spam or not.
-     * @param array $data_to_check The data to check against Akismet.
-     * @param int $level The level the user is signing up for.
-     * @param int $is_spam The spam level returned by Akismet.
-     * @return int The threshold to determine if the user is spam or not.
+     * @param object $level The level the user is signing up for.
+     * @param mixed $result The mosparo verification result.
      */
-    $threshold = apply_filters( 'pmpro_akismet_threshold', $threshold, $data_to_check, $level, $is_spam );
+    $threshold = apply_filters( 'pmpro_mosparo_threshold', $threshold, $level, $result );
+
+    // Check mosparo verification result.
+    $is_spam = PMPro_Mosparo::is_spam( $result ); // Delegate to class method.
 
     if ( ! $is_spam ) {
         $continue = true;
     } else {
-        // Always track as spam for the PMPro spam protection feature.
+        // Track spam activity if PMPro supports it.
         if ( function_exists( 'pmpro_track_spam_activity' ) ) {
             pmpro_track_spam_activity();
         }
@@ -91,50 +80,77 @@ function pmpro_akismet_registration_checks( $continue ) {
         // Stop checkout if above the threshold.
         if ( (int)$is_spam >= (int)$threshold ) {    
             $continue = false;
-            pmpro_setMessage( esc_html__( 'Your username or email has been flagged as suspicious. Double check all fields below and submit again.', 'pmpro-akismet' ), 'pmpro_error' );
-
-            // Set this global to enable the extra check.
-            $pmpro_akismet_extra_nonce = wp_create_nonce( 'pmpro_akismet_extra_nonce' );
+            pmpro_setMessage( esc_html__( 'Your submission has been flagged as suspicious. Please double-check all fields and try again.', 'pmpro-mosparo' ), 'pmpro_error' );
+            $pmpro_mosparo_extra_nonce = wp_create_nonce( 'pmpro_mosparo_extra_nonce' );
         }
     }
 
     return $continue;
 }
-add_filter( 'pmpro_registration_checks', 'pmpro_akismet_registration_checks', 10, 1 );
+add_filter( 'pmpro_registration_checks', 'pmpro_mosparo_registration_checks', 10, 1 );
 
 /**
- * Add an the extra hidden nonce to the checkout form if needed.
+ * Add the mosparo script and hidden token field to the checkout form.
  */
-function pmpro_akismet_add_extra_nonce() {
-    global $pmpro_akismet_extra_nonce;
+function pmpro_mosparo_add_frontend_script() {
+    global $pmpro_mosparo_extra_nonce;
 
-    if ( ! empty( $pmpro_akismet_extra_nonce ) ) {
+    if ( ! PMPro_Mosparo::has_valid_connection() ) {
+        return;
+    }
+
+    // Add mosparo JavaScript (assumes mosparo Integration provides this).
+    $configHelper = \MosparoIntegration\Helper\ConfigHelper::getInstance();
+    $connection = $configHelper->getConnection();
+    if ( $connection ) {
+        $host = $connection->getHost();
+        $uuid = $connection->getUuid();
+        $publicKey = $connection->getPublicKey();
         ?>
-        <input type="hidden" name="pmpro_akismet_extra_nonce" value="<?php echo esc_attr( $pmpro_akismet_extra_nonce ); ?>" />
+        <script type="text/javascript" src="<?php echo esc_url( $host . '/mosparo.js' ); ?>" async></script>
+        <script type="text/javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                new mosparo('mosparo-box', '<?php echo esc_js( $uuid ); ?>', '<?php echo esc_js( $publicKey ); ?>', {
+                    loadCssResource: true,
+                    onSuccess: function(token) {
+                        document.getElementById('mosparo_token').value = token;
+                    }
+                });
+            });
+        </script>
+        <div id="mosparo-box"></div>
+        <input type="hidden" id="mosparo_token" name="mosparo_token" value="" />
+        <?php
+    }
+
+    // Add extra nonce if needed.
+    if ( ! empty( $pmpro_mosparo_extra_nonce ) ) {
+        ?>
+        <input type="hidden" name="pmpro_mosparo_extra_nonce" value="<?php echo esc_attr( $pmpro_mosparo_extra_nonce ); ?>" />
         <?php
     }
 }
-add_action( 'pmpro_checkout_before_submit_button', 'pmpro_akismet_add_extra_nonce' );
+add_action( 'pmpro_checkout_before_submit_button', 'pmpro_mosparo_add_frontend_script' );
 
 /**
- * Show Akismet notice on checkout page below the submit button based on Akismet privacy notice setting.
+ * Show mosparo privacy notice below the submit button.
  * 
  * @since 1.0
- * 
  */
-function pmpro_akismet_show_privacy_notice() {
-  global $pmpro_akismet_extra_nonce;
-  // Bail if Akismet show comment setting is set to 'hide'
-	if ( 'display' !== apply_filters( 'pmpro_akismet_checkout_privacy_notice' , get_option( 'akismet_comment_form_privacy_notice', 'hide' ) ) ) {
-		return;
-	}
+function pmpro_mosparo_show_privacy_notice() {
+    global $pmpro_mosparo_extra_nonce;
 
-	// Show a message that Akismet helps process checkout for spam.
-	?>
-	<p class="pmpro_akismet_privacy_notice">
-		<?php esc_html_e( 'This site uses Akismet to reduce spam.', 'pmpro-akismet' ); ?>
-		<a href="<?php echo esc_url( 'https://akismet.com/privacy/' ); ?>" target="_blank" rel="nofollow noopener"><?php esc_html_e( 'Learn how your data is processed', 'pmpro-akismet' ); ?></a>.
-	</p>
-	<?php
-}	
-add_action( 'pmpro_checkout_before_submit_button', 'pmpro_akismet_show_privacy_notice' );
+    // Check if privacy notice should be displayed (custom filter for flexibility).
+    if ( 'display' !== apply_filters( 'pmpro_mosparo_checkout_privacy_notice', 'display' ) ) {
+        return;
+    }
+
+    // Show a message about mosparo spam protection.
+    ?>
+    <p class="pmpro_mosparo_privacy_notice">
+        <?php esc_html_e( 'This site uses mosparo to reduce spam.', 'pmpro-mosparo' ); ?>
+        <a href="<?php echo esc_url( 'https://mosparo.io/privacy-policy/' ); ?>" target="_blank" rel="nofollow noopener"><?php esc_html_e( 'Learn how your data is processed', 'pmpro-mosparo' ); ?></a>.
+    </p>
+    <?php
+}
+add_action( 'pmpro_checkout_before_submit_button', 'pmpro_mosparo_show_privacy_notice' );
