@@ -88,9 +88,9 @@ function pmpro_mosparo_requirements_check() {
         return;
     }
 
-    // Check if mosparo has a valid connection.
+    // Check if mosparo has a valid connection, passing null explicitly.
     $configHelper = ConfigHelper::getInstance();
-    if ( ! $configHelper->hasConnection() ) {
+    if ( ! $configHelper->hasConnection( null ) ) {
         echo '<div class="error"><p>' . esc_html__( 'The Paid Memberships Pro - mosparo Integration requires a valid connection to a mosparo instance. Please configure mosparo Integration to enable anti-spam functionality.', 'pmpro-mosparo' ) . '</p></div>';
     }
 }

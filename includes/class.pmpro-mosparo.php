@@ -27,7 +27,7 @@ class PMPro_Mosparo {
             return false;
         }
         $configHelper = ConfigHelper::getInstance();
-        return $configHelper->hasConnection(); // Assumes this method exists in mosparo.
+        return $configHelper->hasConnection( null ); // Pass null explicitly.
     }
 
     /**
