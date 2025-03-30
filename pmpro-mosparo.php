@@ -36,10 +36,13 @@ function pmpro_mosparo_requirements_check() {
     $mosparo_plugin = 'mosparo-integration/mosparo-integration.php';
     $is_mosparo_active = is_plugin_active( $mosparo_plugin );
 
-    // Check Mosparo settings for a valid connection
-    $mosparo_settings = get_option( 'mosparo_settings', [] );
-    $has_valid_connection = ! empty( $mosparo_settings['connections'] ) && is_array( $mosparo_settings['connections'] ) && ! empty( array_filter( $mosparo_settings['connections'], function( $conn ) {
-        return ! empty( $conn['host'] ) && ! empty( $conn['uuid'] );
+    // Check Mosparo settings for a valid connection using the correct option key
+    $mosparo_config = get_option( 'mosparo-integration-configuration', [] );
+    $has_valid_connection = ! empty( $mosparo_config['connections'] ) && is_array( $mosparo_config['connections'] ) && ! empty( array_filter( $mosparo_config['connections'], function( $conn ) {
+        // Handle both array and object formats due to serialization
+        $host = is_object( $conn ) ? ($conn->getHost() ?? '') : ($conn['host'] ?? '');
+        $uuid = is_object( $conn ) ? ($conn->getUuid() ?? '') : ($conn['uuid'] ?? '');
+        return ! empty( $host ) && ! empty( $uuid );
     } ) );
 
     if ( ! $is_mosparo_active || ! $has_valid_connection ) {
@@ -53,16 +56,9 @@ function pmpro_mosparo_requirements_check() {
         printf( '<div class="notice notice-warning"><p>%s</p></div>', esc_html( $message ) );
     }
 
-    // Force debug logging
+    // Debug logging
     file_put_contents( '/tmp/pmpro-mosparo-debug.log', 'PMPro Mosparo: Mosparo Active: ' . ( $is_mosparo_active ? 'yes' : 'no' ) . ', Valid Connection: ' . ( $has_valid_connection ? 'yes' : 'no' ) . "\n", FILE_APPEND );
-    file_put_contents( '/tmp/pmpro-mosparo-debug.log', 'PMPro Mosparo: Mosparo Settings: ' . print_r( $mosparo_settings, true ) . "\n", FILE_APPEND );
-
-    // Debug all Mosparo-related options
-    $all_options = wp_load_alloptions();
-    $mosparo_related = array_filter( $all_options, function( $key ) {
-        return strpos( $key, 'mosparo' ) !== false;
-    }, ARRAY_FILTER_USE_KEY );
-    file_put_contents( '/tmp/pmpro-mosparo-debug.log', 'PMPro Mosparo: All Mosparo-related Options: ' . print_r( $mosparo_related, true ) . "\n", FILE_APPEND );
+    file_put_contents( '/tmp/pmpro-mosparo-debug.log', 'PMPro Mosparo: Mosparo Config: ' . print_r( $mosparo_config, true ) . "\n", FILE_APPEND );
 }
 
 add_action( 'admin_notices', 'pmpro_mosparo_requirements_check' );
