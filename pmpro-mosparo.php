@@ -16,8 +16,8 @@ define( 'PMPRO_MOSPARO_DIR', dirname( __FILE__ ) );
 define( 'PMPRO_MOSPARO_BASENAME', plugin_basename( __FILE__ ) );
 
 // Includes (adjust as needed)
-require_once PMPRO_MOSPARO_DIR . '/includes/tracking.php'; // Replace with your actual includes if any
-require_once PMPRO_MOSPARO_DIR . '/includes/admin.php';
+require_once PMPRO_MOSPARO_DIR . '/includes/checkout.php'; // Replace with your actual includes if any
+require_once PMPRO_MOSPARO_DIR . '/includes/class.pmpro-mosparo.php';
 
 function pmpro_mosparo_load_textdomain() {
     load_plugin_textdomain( 'pmpro-mosparo-integration', false, dirname( PMPRO_MOSPARO_BASENAME ) . '/languages/' );
