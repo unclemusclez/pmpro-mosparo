@@ -16,8 +16,8 @@ define( 'PMPRO_MOSPARO_DIR', dirname( __FILE__ ) );
 define( 'PMPRO_MOSPARO_BASENAME', plugin_basename( __FILE__ ) );
 
 // Includes (adjust as needed)
-require_once PMPRO_MOSPARO_DIR . '/includes/checkout.php'; // Replace with your actual includes if any
-require_once PMPRO_MOSPARO_DIR . '/includes/class.pmpro-mosparo.php';
+require_once PMPRO_MOSPARO_DIR . '/includes/tracking.php'; // Replace with your actual includes if any
+require_once PMPRO_MOSPARO_DIR . '/includes/admin.php';
 
 function pmpro_mosparo_load_textdomain() {
     load_plugin_textdomain( 'pmpro-mosparo-integration', false, dirname( PMPRO_MOSPARO_BASENAME ) . '/languages/' );
@@ -56,6 +56,13 @@ function pmpro_mosparo_requirements_check() {
     // Force debug logging
     file_put_contents( '/tmp/pmpro-mosparo-debug.log', 'PMPro Mosparo: Mosparo Active: ' . ( $is_mosparo_active ? 'yes' : 'no' ) . ', Valid Connection: ' . ( $has_valid_connection ? 'yes' : 'no' ) . "\n", FILE_APPEND );
     file_put_contents( '/tmp/pmpro-mosparo-debug.log', 'PMPro Mosparo: Mosparo Settings: ' . print_r( $mosparo_settings, true ) . "\n", FILE_APPEND );
+
+    // Debug all Mosparo-related options
+    $all_options = wp_load_alloptions();
+    $mosparo_related = array_filter( $all_options, function( $key ) {
+        return strpos( $key, 'mosparo' ) !== false;
+    }, ARRAY_FILTER_USE_KEY );
+    file_put_contents( '/tmp/pmpro-mosparo-debug.log', 'PMPro Mosparo: All Mosparo-related Options: ' . print_r( $mosparo_related, true ) . "\n", FILE_APPEND );
 }
 
 add_action( 'admin_notices', 'pmpro_mosparo_requirements_check' );
