@@ -1,107 +1,69 @@
 <?php
 /**
  * Plugin Name: Paid Memberships Pro - Mosparo Integration
- * Plugin URI: https://github.com/unclemusclez/pmpro-mosparo
- * Description: Protect your membership site from checkout spam with Mosparo and Paid Memberships Pro.
+ * Plugin URI: https://github.com/yourusername/pmpro-mosparo-integration
+ * Description: Integrates Mosparo spam protection with Paid Memberships Pro.
  * Version: 1.0
- * Author: Devin J. Dawson
- * Author URI: https://waterpistol.co
- * Text Domain: pmpro-mosparo
+ * Author: Your Name
+ * Author URI: https://yourwebsite.com
+ * Text Domain: pmpro-mosparo-integration
  * Domain Path: /languages
+ * License: GPL v3 or later
+ * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-use MosparoIntegration\Helper\ConfigHelper;
+define( 'PMPRO_MOSPARO_DIR', dirname( __FILE__ ) );
+define( 'PMPRO_MOSPARO_BASENAME', plugin_basename( __FILE__ ) );
 
-/**
- * Includes go here.
- */
-require_once( dirname( __FILE__ ) . '/includes/class.pmpro-mosparo.php' );
-require_once( dirname( __FILE__ ) . '/includes/checkout.php' );
+// Includes (adjust as needed)
+require_once PMPRO_MOSPARO_DIR . '/includes/tracking.php'; // Replace with your actual includes if any
+require_once PMPRO_MOSPARO_DIR . '/includes/admin.php';
 
-/**
- * Admin notice to check Mosparo Integration only (no PMPro check).
- * 
- * @since 1.0
- */
+function pmpro_mosparo_load_textdomain() {
+    load_plugin_textdomain( 'pmpro-mosparo-integration', false, dirname( PMPRO_MOSPARO_BASENAME ) . '/languages/' );
+}
+add_action( 'plugins_loaded', 'pmpro_mosparo_load_textdomain' );
+
 function pmpro_mosparo_requirements_check() {
-    // Only show notices on PMPro-related pages.
     if ( ! isset( $_REQUEST['page'] ) || strpos( $_REQUEST['page'], 'pmpro' ) === false ) {
         return;
     }
 
-    // Check for Mosparo Integration plugin only.
-    $required_plugins = array(
-        'mosparo-integration' => __( 'Mosparo Integration', 'pmpro-mosparo' )
-    );
-
-    // Check if Mosparo Integration is installed.
-    $missing_plugins = array();
-    foreach ( $required_plugins as $plugin => $name ) {
-        if ( ! file_exists( WP_PLUGIN_DIR . '/' . $plugin ) ) {
-            $missing_plugins[$plugin] = $name;
-        }
+    if ( ! function_exists( 'is_plugin_active' ) ) {
+        include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
     }
 
-    // If Mosparo Integration is missing, show a notice.
-    if ( ! empty( $missing_plugins ) ) {
-        $install_plugins = array();
-        foreach ( $missing_plugins as $path => $name ) {
-            $install_plugins[] = sprintf( '<a href="%s">%s</a>', esc_url( wp_nonce_url( self_admin_url( 'update.php?action=install-plugin&plugin=' . $path ), 'install-plugin_' . $path ) ), esc_html( $name ) );
-        }
+    $mosparo_plugin = 'mosparo-integration/mosparo-integration.php';
+    $is_mosparo_active = is_plugin_active( $mosparo_plugin );
 
-        printf(
-            '<div class="notice notice-warning"><p>%s</p></div>',
+    // Check Mosparo settings for a valid connection
+    $mosparo_settings = get_option( 'mosparo_settings', [] );
+    $has_valid_connection = ! empty( $mosparo_settings['connections'] ) && is_array( $mosparo_settings['connections'] ) && ! empty( array_filter( $mosparo_settings['connections'], function( $conn ) {
+        return ! empty( $conn['host'] ) && ! empty( $conn['uuid'] );
+    } ) );
+
+    if ( ! $is_mosparo_active || ! $has_valid_connection ) {
+        $message = $is_mosparo_active ?
+            __( 'The Paid Memberships Pro - Mosparo Integration requires a valid connection to a Mosparo instance. Please configure the Mosparo Integration plugin under Settings > Mosparo Integration to enable anti-spam functionality.', 'pmpro-mosparo-integration' ) :
             sprintf(
-                esc_html__( 'The following plugin(s) are required for the %1$s plugin to work: %2$s', 'pmpro-mosparo' ),
-                esc_html__( 'Paid Memberships Pro - Mosparo Integration', 'pmpro-mosparo' ),
-                implode( ', ', $install_plugins )
-            )
-        );
-        return;
+                __( 'The %1$s plugin requires the "Mosparo Integration" plugin to be installed and active. <a href="%2$s">Install Mosparo Integration</a>.', 'pmpro-mosparo-integration' ),
+                __( 'Paid Memberships Pro - Mosparo Integration', 'pmpro-mosparo-integration' ),
+                esc_url( admin_url( 'plugin-install.php?s=mosparo-integration&tab=search&type=term' ) )
+            );
+        printf( '<div class="notice notice-warning"><p>%s</p></div>', esc_html( $message ) );
     }
 
-    // Check if Mosparo Integration is active.
-    $inactive_plugins = array();
-    foreach ( $required_plugins as $plugin => $name ) {
-        $full_path = $plugin . '/' . $plugin . '.php';
-        if ( ! is_plugin_active( $full_path ) ) {
-            $inactive_plugins[$plugin] = $name;
-        }
-    }
-
-    // If Mosparo Integration is inactive, show a notice.
-    if ( ! empty( $inactive_plugins ) ) {
-        $activate_plugins = array();
-        foreach ( $inactive_plugins as $path => $name ) {
-            $full_path = $path . '/' . $path . '.php';
-            $activate_plugins[] = sprintf( '<a href="%s">%s</a>', esc_url( wp_nonce_url( self_admin_url( 'plugins.php?action=activate&plugin=' . $full_path ), 'activate-plugin_' . $full_path ) ), esc_html( $name ) );
-        }
-
-        printf(
-            '<div class="notice notice-warning"><p>%s</p></div>',
-            sprintf(
-                esc_html__( 'The following plugin(s) are required for the %1$s plugin to work: %2$s', 'pmpro-mosparo' ),
-                esc_html__( 'Paid Memberships Pro - Mosparo Integration', 'pmpro-mosparo' ),
-                implode( ', ', $activate_plugins )
-            )
-        );
-        return;
-    }
-
-    // Check if Mosparo has a valid connection, passing null explicitly.
-    $configHelper = ConfigHelper::getInstance();
-    if ( ! $configHelper->hasConnection( null ) ) {
-        echo '<div class="error"><p>' . esc_html__( 'The Paid Memberships Pro - Mosparo Integration requires a valid connection to a Mosparo instance. Please configure the Mosparo Integration plugin under Settings > Mosparo Integration to enable anti-spam functionality.', 'pmpro-mosparo' ) . '</p></div>';
-    }
+    // Force debug logging
+    file_put_contents( '/tmp/pmpro-mosparo-debug.log', 'PMPro Mosparo: Mosparo Active: ' . ( $is_mosparo_active ? 'yes' : 'no' ) . ', Valid Connection: ' . ( $has_valid_connection ? 'yes' : 'no' ) . "\n", FILE_APPEND );
+    file_put_contents( '/tmp/pmpro-mosparo-debug.log', 'PMPro Mosparo: Mosparo Settings: ' . print_r( $mosparo_settings, true ) . "\n", FILE_APPEND );
 }
+
 add_action( 'admin_notices', 'pmpro_mosparo_requirements_check' );
 
-/**
- * Load the plugin text domain for translation.
- * 
- * @since 1.0
- */
-function pmpro_mosparo_load_textdomain() {
-    load_plugin_textdomain( 'pmpro-mosparo', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+function pmpro_mosparo_init() {
+    if ( function_exists( 'pmpro_getMembershipLevelForUser' ) && class_exists( 'MosparoIntegration\Module' ) ) {
+        // Your initialization logic here
+        file_put_contents( '/tmp/pmpro-mosparo-debug.log', 'PMPro Mosparo: Initialization successful.' . "\n", FILE_APPEND );
+    }
 }
-add_action( 'plugins_loaded', 'pmpro_mosparo_load_textdomain' );
+add_action( 'init', 'pmpro_mosparo_init', 20 );
